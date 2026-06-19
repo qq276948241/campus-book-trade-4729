@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import {
   BookOpen, Search, PlusCircle, MessageSquare, User,
   LogIn, LogOut, ChevronDown,
@@ -21,6 +21,10 @@ export default function Navbar() {
     setSearch(params.get('keyword') || '');
   }, [location.search]);
 
+  useEffect(() => {
+    setMenuOpen(false);
+  }, [location.pathname]);
+
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (location.pathname !== '/') navigate('/');
@@ -38,11 +42,21 @@ export default function Navbar() {
     navigate('/sell');
   };
 
+  const isUserPage = location.pathname === '/orders' || location.pathname === '/profile';
+  const isSellPage = location.pathname === '/sell';
+
   return (
     <header className="sticky top-0 z-40 backdrop-blur-md bg-paper/80 border-b border-paper-edge">
       <div className="container">
         <div className="flex items-center gap-4 h-16">
-          <Link to="/" className="flex items-center gap-2 shrink-0 group">
+          <NavLink
+            to="/"
+            end
+            className={({ isActive }) => cn(
+              'flex items-center gap-2 shrink-0 group',
+              isActive && 'opacity-100',
+            )}
+          >
             <div className="relative">
               <BookOpen className="w-7 h-7 text-moss-600" />
               <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-ember rounded-full animate-pulse" />
@@ -50,7 +64,7 @@ export default function Navbar() {
             <span className="font-serif font-bold text-xl text-moss-700 group-hover:text-moss-800 transition-colors">
               书窝
             </span>
-          </Link>
+          </NavLink>
 
           <form onSubmit={handleSearch} className="flex-1 max-w-md ml-2">
             <div className="relative">
@@ -68,29 +82,42 @@ export default function Navbar() {
           <nav className="flex items-center gap-1 ml-auto">
             <button
               onClick={handleSell}
-              className="inline-flex items-center gap-1.5 h-10 px-5 bg-moss-500 hover:bg-moss-600 text-paper-pure rounded-lg font-medium text-sm transition-all shadow-soft hover:shadow-md"
+              className={cn(
+                'inline-flex items-center gap-1.5 h-10 px-5 rounded-lg font-medium text-sm transition-all shadow-soft hover:shadow-md',
+                isSellPage
+                  ? 'bg-moss-600 text-paper-pure ring-2 ring-moss-300 ring-offset-2 ring-offset-paper'
+                  : 'bg-moss-500 hover:bg-moss-600 text-paper-pure',
+              )}
             >
               <PlusCircle className="w-4 h-4" />
               <span className="hidden sm:inline">上架卖书</span>
             </button>
 
-            <Link
+            <NavLink
               to="/messages"
-              className={cn(
+              className={({ isActive }) => cn(
                 'relative inline-flex items-center justify-center w-10 h-10 rounded-lg transition-all',
-                location.pathname === '/messages' ? 'bg-moss-100 text-moss-700' : 'text-ink-soft hover:bg-paper-warm text-ink',
+                isActive ? 'bg-moss-100 text-moss-700' : 'text-ink-soft hover:bg-paper-warm text-ink',
               )}
             >
               <MessageSquare className="w-5 h-5" />
-            </Link>
+            </NavLink>
 
             {isLoggedIn ? (
               <div className="relative">
                 <button
                   onClick={() => setMenuOpen(!menuOpen)}
-                  className="inline-flex items-center gap-1.5 h-10 px-3 rounded-lg hover:bg-paper-warm transition-all"
+                  className={cn(
+                    'inline-flex items-center gap-1.5 h-10 px-3 rounded-lg transition-all',
+                    isUserPage || menuOpen ? 'bg-paper-warm' : 'hover:bg-paper-warm',
+                  )}
                 >
-                  <div className="w-8 h-8 rounded-full bg-moss-100 flex items-center justify-center text-moss-700 font-bold text-sm border border-moss-200">
+                  <div className={cn(
+                    'w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm border transition-all',
+                    isUserPage
+                      ? 'bg-moss-500 text-paper-pure border-moss-600'
+                      : 'bg-moss-100 text-moss-700 border-moss-200',
+                  )}>
                     {user?.nickname?.[0] || 'U'}
                   </div>
                   <ChevronDown className={cn('w-4 h-4 text-ink-soft transition-transform', menuOpen && 'rotate-180')} />
@@ -99,20 +126,26 @@ export default function Navbar() {
                   <>
                     <div className="fixed inset-0 z-10" onClick={() => setMenuOpen(false)} />
                     <div className="absolute right-0 top-full mt-2 w-48 bg-paper-pure rounded-lg shadow-book-hover border border-paper-edge overflow-hidden z-20 animate-slide-in">
-                      <Link
+                      <NavLink
                         to="/orders"
-                        className="flex items-center gap-2 px-4 py-2.5 text-sm text-ink hover:bg-moss-50"
                         onClick={() => setMenuOpen(false)}
+                        className={({ isActive }) => cn(
+                          'flex items-center gap-2 px-4 py-2.5 text-sm transition-colors',
+                          isActive ? 'bg-moss-100 text-moss-700 font-medium' : 'text-ink hover:bg-moss-50',
+                        )}
                       >
                         我的订单
-                      </Link>
-                      <Link
+                      </NavLink>
+                      <NavLink
                         to="/profile"
-                        className="flex items-center gap-2 px-4 py-2.5 text-sm text-ink hover:bg-moss-50"
                         onClick={() => setMenuOpen(false)}
+                        className={({ isActive }) => cn(
+                          'flex items-center gap-2 px-4 py-2.5 text-sm transition-colors',
+                          isActive ? 'bg-moss-100 text-moss-700 font-medium' : 'text-ink hover:bg-moss-50',
+                        )}
                       >
                         <User className="w-4 h-4" /> 个人中心
-                      </Link>
+                      </NavLink>
                       <div className="border-t border-paper-edge" />
                       <button
                         onClick={() => {
